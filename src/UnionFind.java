@@ -17,10 +17,20 @@ public class UnionFind {
     }
 
     public String find(String node) {
-        if (!parent.get(node).equals(node)) {
-            parent.put(node, find(parent.get(node)));
+        List<String> path = new ArrayList<>();
+        String current = node;
+
+        while (!parent.get(current).equals(current)) {
+            path.add(current);
+            current = parent.get(current);
         }
-        return parent.get(node);
+        String root = current;
+
+        for (String compressedNode : path) {
+            parent.put(compressedNode, root);
+        }
+
+        return root;
     }
 
     public void union(String node1, String node2) {

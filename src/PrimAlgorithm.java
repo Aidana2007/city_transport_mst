@@ -3,33 +3,33 @@ package src;
 import java.util.*;
 
 public class PrimAlgorithm {
-    private int operationsCount;
 
     public MSTResult findMST(Graph graph) {
         long startTime = System.nanoTime();
-        operationsCount = 0;
-
-        if (graph.getNodes().isEmpty()) {
-            throw new IllegalArgumentException("Graph cannot be empty");
-        }
+        int operationsCount = 0;
 
         List<String> nodes = graph.getNodes();
         List<Edge> edges = graph.getEdges();
         List<Edge> mstEdges = new ArrayList<>();
         Set<String> visited = new HashSet<>();
-        PriorityQueue<Edge> pq = new PriorityQueue<>(Comparator.comparingInt(Edge::getWeight));
+        PriorityQueue<Edge> pq = new PriorityQueue<>((a, b) -> a.getWeight() - b.getWeight());
 
-        Map<String, List<Edge>> adjacencyList = buildAdjacencyList(edges);
-        operationsCount += edges.size() * 2;
+        Map<String, List<Edge>> adj = new HashMap<>();
+        for (Edge edge : edges) {
+            adj.computeIfAbsent(edge.getFrom(), k -> new ArrayList<>()).add(edge);
+            adj.computeIfAbsent(edge.getTo(), k -> new ArrayList<>()).add(edge);
+            operationsCount += 2;
+        }
 
-        String startNode = nodes.get(0);
-        visited.add(startNode);
-        operationsCount++;
+        if (!nodes.isEmpty()) {
+            visited.add(nodes.get(0));
+            operationsCount++;
 
-        if (adjacencyList.containsKey(startNode)) {
-            for (Edge edge : adjacencyList.get(startNode)) {
-                pq.add(edge);
-                operationsCount++;
+            if (adj.containsKey(nodes.get(0))) {
+                for (Edge edge : adj.get(nodes.get(0))) {
+                    pq.add(edge);
+                    operationsCount++;
+                }
             }
         }
 
@@ -43,7 +43,6 @@ public class PrimAlgorithm {
             } else if (visited.contains(minEdge.getTo()) && !visited.contains(minEdge.getFrom())) {
                 nextNode = minEdge.getFrom();
             }
-
             operationsCount += 2;
 
             if (nextNode != null) {
@@ -51,8 +50,8 @@ public class PrimAlgorithm {
                 visited.add(nextNode);
                 operationsCount += 2;
 
-                if (adjacencyList.containsKey(nextNode)) {
-                    for (Edge edge : adjacencyList.get(nextNode)) {
+                if (adj.containsKey(nextNode)) {
+                    for (Edge edge : adj.get(nextNode)) {
                         if (!visited.contains(edge.getFrom()) || !visited.contains(edge.getTo())) {
                             pq.add(edge);
                             operationsCount++;
@@ -63,22 +62,14 @@ public class PrimAlgorithm {
         }
 
         long endTime = System.nanoTime();
-        double executionTimeMs = (endTime - startTime) / 1_000_000.0;
+        double timeMs = (endTime - startTime) / 1_000_000.0;
 
-        int totalCost = mstEdges.stream().mapToInt(Edge::getWeight).sum();
+        int totalCost = 0;
+        for (Edge edge : mstEdges) {
+            totalCost += edge.getWeight();
+        }
         operationsCount++;
 
-        return new MSTResult(mstEdges, totalCost, operationsCount, executionTimeMs, "Prim");
-    }
-
-    private Map<String, List<Edge>> buildAdjacencyList(List<Edge> edges) {
-        Map<String, List<Edge>> adjacencyList = new HashMap<>();
-
-        for (Edge edge : edges) {
-            adjacencyList.computeIfAbsent(edge.getFrom(), k -> new ArrayList<>()).add(edge);
-            adjacencyList.computeIfAbsent(edge.getTo(), k -> new ArrayList<>()).add(edge);
-        }
-
-        return adjacencyList;
+        return new MSTResult(mstEdges, totalCost, operationsCount, timeMs, "Prim");
     }
 }

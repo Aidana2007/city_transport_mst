@@ -3,21 +3,16 @@ package src;
 import java.util.*;
 
 public class KruskalAlgorithm {
-    private int operationsCount;
 
     public MSTResult findMST(Graph graph) {
         long startTime = System.nanoTime();
-        operationsCount = 0;
-
-        if (graph.getNodes().isEmpty()) {
-            throw new IllegalArgumentException("Graph cannot be empty");
-        }
+        int operationsCount = 0;
 
         List<Edge> edges = new ArrayList<>(graph.getEdges());
         List<Edge> mstEdges = new ArrayList<>();
 
-        edges.sort(Comparator.comparingInt(Edge::getWeight));
-        operationsCount += edges.size() * (int) Math.log(edges.size());
+        edges.sort((a, b) -> a.getWeight() - b.getWeight());
+        operationsCount += edges.size();
 
         UnionFind uf = new UnionFind(graph.getNodes());
         operationsCount += graph.getNodes().size();
@@ -25,32 +20,28 @@ public class KruskalAlgorithm {
         for (Edge edge : edges) {
             operationsCount++;
 
-            String fromRoot = uf.find(edge.getFrom());
-            String toRoot = uf.find(edge.getTo());
+            if (mstEdges.size() == graph.getNodes().size() - 1) break;
+
+            String root1 = uf.find(edge.getFrom());
+            String root2 = uf.find(edge.getTo());
             operationsCount += 2;
 
-            if (!fromRoot.equals(toRoot)) {
+            if (!root1.equals(root2)) {
                 mstEdges.add(edge);
                 uf.union(edge.getFrom(), edge.getTo());
                 operationsCount += 2;
             }
-
-            if (mstEdges.size() == graph.getNodes().size() - 1) {
-                break;
-            }
-        }
-
-        if (mstEdges.size() != graph.getNodes().size() - 1) {
-            System.out.println("⚠️  Warning: Graph may be disconnected. MST has " +
-                    mstEdges.size() + " edges, expected " + (graph.getNodes().size() - 1));
         }
 
         long endTime = System.nanoTime();
-        double executionTimeMs = (endTime - startTime) / 1_000_000.0;
+        double timeMs = (endTime - startTime) / 1_000_000.0;
 
-        int totalCost = mstEdges.stream().mapToInt(Edge::getWeight).sum();
+        int totalCost = 0;
+        for (Edge edge : mstEdges) {
+            totalCost += edge.getWeight();
+        }
         operationsCount++;
 
-        return new MSTResult(mstEdges, totalCost, operationsCount, executionTimeMs, "Kruskal");
+        return new MSTResult(mstEdges, totalCost, operationsCount, timeMs, "Kruskal");
     }
 }
