@@ -23,14 +23,4 @@ public class MSTResult {
     public int getOperationsCount() { return operationsCount; }
     public double getExecutionTimeMs() { return executionTimeMs; }
     public String getAlgorithmName() { return algorithmName; }
-
-    public boolean costsMatch(MSTResult other) {
-        return this.totalCost == other.totalCost;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s: Cost=%d, Ops=%,d, Time=%.3fms",
-                algorithmName, totalCost, operationsCount, executionTimeMs);
-    }
 }
